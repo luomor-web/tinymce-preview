@@ -12,11 +12,20 @@ npm adduser
 npm login
 npm publish
 
+npm i tinymce-plugin-multipreview
+
+# 登录 npm 网站，进入令牌管理
+# 访问：https://www.npmjs.com/settings/你的用户名/tokens
+
+# 或使用 CLI（需要 npm v10+）
+npm token create --type automation --read-only false
+
 # 一次性使用（仅本次终端会话有效）
 npm config set //registry.npmjs.org/:_authToken=你的令牌字符串
 
 # 或永久保存到项目（推荐）
 echo "//registry.npmjs.org/:_authToken=你的令牌字符串" >> .npmrc
 
-npm i tinymce-plugin-multipreview
+npm publish --dry-run  # 先试运行
+npm publish            # 实际发布
 ```
