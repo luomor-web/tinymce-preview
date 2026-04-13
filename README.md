@@ -1,6 +1,6 @@
-# TinyMCE 多端预览插件
+# tinymce-plugin-multipreview
 
-一款为 TinyMCE 打造的多端预览插件，支持手机、平板、PC 三种视口，并提供完整的 Vue 2 / Vue 3 集成方案。
+TinyMCE 多端预览插件，支持手机、平板、PC 三种视口预览，并提供 Vue 2 / Vue 3 组件封装。
 
 ## 功能特性
 
@@ -9,70 +9,77 @@
 - 🖥️ **PC 预览** — 1280×800，桌面级视口
 - 🔄 **横竖屏切换** — 一键旋转，验证横屏适配
 - 🎨 **设备外壳** — 还原刘海、Home 键等真实设备细节
-- ⚡ **零依赖** — 纯 JS 实现，无额外依赖
+- ⚡ **零依赖** — 纯 JS 实现，支持 UMD/ESM/CJS 多种模块格式
 - 🔧 **Vue 2 / Vue 3** — 提供完整 Options API 和 Composition API 组件
 
----
+## 安装
+
+```bash
+npm install tinymce-plugin-multipreview
+```
 
 ## 快速开始
 
-### 方式一：原生 JS
+### 原生 JS 使用
+
+#### CDN 引入
 
 ```html
-<!-- 1. 引入 TinyMCE -->
-<script src="/tinymce/tinymce.min.js"></script>
-
-<!-- 2. 引入预览插件 -->
-<script src="/tinymce/plugins/multipreview/plugin.js"></script>
-
-<!-- 3. 初始化 -->
+<script src="https://unpkg.com/tinymce-plugin-multipreview/dist/plugin.umd.js"></script>
 <script>
 tinymce.init({
   selector: '#editor',
   plugins: ['multipreview', 'lists', 'link', 'image'],
   toolbar: 'bold italic | multipreview',
   multipreview: {
-    customStyles: 'body { background: #f9fafb; }'  // 可选
+    customStyles: 'body { background: #f9fafb; }'
   }
 })
 </script>
 ```
 
-### 方式二：Vue 2（Options API）
+#### NPM + 打包工具
 
-```bash
-npm install @tinymce/tinymce-vue tinymce
+```js
+import { initPlugin } from 'tinymce-plugin-multipreview'
+
+tinymce.init({
+  selector: '#editor',
+  plugins: ['multipreview', 'lists', 'link'],
+  toolbar: 'multipreview',
+  setup: (editor) => {
+    initPlugin(editor, {
+      customStyles: 'body { max-width: 700px; margin: 0 auto; }'
+    })
+  }
+})
 ```
+
+### Vue 2 使用
 
 ```vue
 <template>
   <TinymcePreviewEditor
     v-model="content"
     :height="500"
-    plugin-path="/tinymce/plugins/multipreview/plugin.js"
-    :show-external-trigger="true"
     ref="editor"
   />
+  <button @click="$refs.editor.openPreview()">预览</button>
 </template>
 
 <script>
-import TinymcePreviewEditor from './TinymcePreviewEditor.vue'
+import TinymcePreviewEditor from 'tinymce-plugin-multipreview/vue/vue2'
 
 export default {
   components: { TinymcePreviewEditor },
   data() {
     return { content: '' }
-  },
-  methods: {
-    preview() {
-      this.$refs.editor.openPreview()
-    }
   }
 }
 </script>
 ```
 
-### 方式三：Vue 3（Composition API）
+### Vue 3 使用
 
 ```vue
 <template>
@@ -81,33 +88,21 @@ export default {
     :height="500"
     ref="editorRef"
   />
-  <button @click="editorRef.openPreview()">打开预览</button>
+  <button @click="openPreview">预览</button>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import TinymcePreviewEditor from './TinymcePreviewEditor.vue3.vue'
+import TinymcePreviewEditor from 'tinymce-plugin-multipreview/vue/vue3'
 
 const editorRef = ref(null)
 const content = ref('')
+
+const openPreview = () => {
+  editorRef.value?.openPreview()
+}
 </script>
 ```
-
----
-
-## 文件结构
-
-```
-tinymce-preview-plugin/
-├── src/
-│   ├── plugin.js                     # 核心插件（原生 JS，TinyMCE 注册）
-│   ├── TinymcePreviewEditor.vue      # Vue 2 组件（Options API）
-│   └── TinymcePreviewEditor.vue3.vue # Vue 3 组件（Composition API）
-├── demo.html                          # 在线演示
-└── README.md
-```
-
----
 
 ## Props（Vue 组件）
 
@@ -120,8 +115,6 @@ tinymce-preview-plugin/
 | `showExternalTrigger` | `Boolean` | `false` | 是否在编辑器外显示预览按钮 |
 | `height` | `Number\|String` | `500` | 编辑器高度（px） |
 
----
-
 ## Methods（Vue 组件 ref）
 
 | 方法 | 说明 |
@@ -129,8 +122,6 @@ tinymce-preview-plugin/
 | `openPreview()` | 打开预览弹窗（默认手机视口） |
 | `getContent()` | 获取编辑器 HTML 内容 |
 | `setContent(html)` | 设置编辑器内容 |
-
----
 
 ## 插件选项（TinyMCE init）
 
@@ -143,14 +134,26 @@ tinymce.init({
 })
 ```
 
----
+## 开发
+
+```bash
+# 安装依赖
+npm install
+
+# 构建插件
+npm run build
+
+# 构建 Vue 组件
+npm run build:vue
+
+# 发布
+npm run release
+```
 
 ## TinyMCE 版本支持
 
 - TinyMCE 5.x ✅
 - TinyMCE 6.x ✅
-
----
 
 ## License
 

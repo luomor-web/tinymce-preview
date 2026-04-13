@@ -1,17 +1,13 @@
 <template>
   <div class="tinymce-preview-wrapper">
-    <!-- TinyMCE 编辑器 -->
     <div class="editor-container">
       <editor
         v-model="content"
         :init="editorConfig"
         :disabled="disabled"
         @init="onEditorInit"
-        @change="onContentChange"
       />
     </div>
-
-    <!-- 独立触发按钮（可选，插件已在工具栏内置按钮） -->
     <div v-if="showExternalTrigger" class="preview-trigger">
       <button class="preview-btn" @click="openPreview">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -26,18 +22,6 @@
 
 <script>
 import Editor from '@tinymce/tinymce-vue'
-
-// 动态加载插件脚本
-function loadPluginScript(pluginUrl) {
-  return new Promise((resolve, reject) => {
-    if (window.TinyMCEPreviewPlugin) return resolve()
-    const script = document.createElement('script')
-    script.src = pluginUrl
-    script.onload = resolve
-    script.onerror = reject
-    document.head.appendChild(script)
-  })
-}
 
 export default {
   name: 'TinymcePreviewEditor',
@@ -54,7 +38,7 @@ export default {
       type: Boolean,
       default: false,
     },
-    /** TinyMCE API Key（cloud版需要） */
+    /** TinyMCE API Key（cloud 版需要） */
     apiKey: {
       type: String,
       default: 'no-api-key',
@@ -98,16 +82,13 @@ export default {
   computed: {
     editorConfig() {
       return {
-        // 使用自托管 TinyMCE 时指定 base_url
-        // base_url: '/tinymce',
-        // suffix: '.min',
         height: this.height,
         menubar: 'file edit view insert format tools table help',
         plugins: [
           'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
           'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
           'insertdatetime', 'media', 'table', 'wordcount',
-          'multipreview', // 我们的预览插件
+          'multipreview',
         ],
         toolbar: [
           'undo redo | blocks | bold italic underline strikethrough | ' +
@@ -116,15 +97,12 @@ export default {
           'link image media table | code fullscreen | multipreview',
           this.extraToolbar,
         ].filter(Boolean).join(' | '),
-        // 插件选项
         multipreview: {
           customStyles: this.customPreviewStyles,
         },
-        // 外部插件路径（自托管时使用）
         external_plugins: {
           multipreview: this.pluginPath,
         },
-        // 内容样式
         content_style: `
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -136,9 +114,6 @@ export default {
             padding: 20px;
           }
         `,
-        // 中文语言包（需自行下载）
-        // language: 'zh_CN',
-        // language_url: '/tinymce/langs/zh_CN.js',
         branding: false,
         promotion: false,
         setup: (editor) => {
