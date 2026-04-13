@@ -13,14 +13,6 @@ tinymce-preview/
 ├── plugin.js                          # 核心 TinyMCE 插件（原生 JS）
 ├── TinymcePreviewEditor.vue           # Vue 2 组件（Options API）
 ├── TinymcePreviewEditor.vue3.vue      # Vue 3 组件（Composition API）
-├── tinymce/                           # TinyMCE 核心库（vendor）
-│   └── js/tinymce/
-│       ├── tinymce.min.js             # 核心编辑器
-│       ├── tinymce.d.ts               # TypeScript 类型定义
-│       ├── icons/default/             # 图标资源
-│       ├── models/dom/                # 编辑器模型
-│       ├── themes/silver/             # UI 主题
-│       └── plugins/*/                 # 内置插件
 └── docs/                              # 文档
 ```
 
