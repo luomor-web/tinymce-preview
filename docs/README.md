@@ -5,4 +5,6 @@
 nvm use v22.15.0
 claude
 /init
+CLAUDE.md改写为中文
+将tinymce插件更改为npm可以安装的版本
 ```
