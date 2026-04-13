@@ -26,11 +26,11 @@
     "responsive",
     "vue"
   ],
-  "author": "",
+  "author": "zhangchunsheng",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/tinymce-plugin-multipreview"
+    "url": "https://github.com/luomor-web/tinymce-preview"
   },
   "peerDependencies": {
     "tinymce": "^5.0.0 || ^6.0.0"
