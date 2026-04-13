@@ -7,6 +7,7 @@ claude
 /init
 CLAUDE.md改写为中文
 将tinymce插件更改为npm可以安装的版本
+Module not found: Error: Can't resolve 'tinymce-plugin-multipreview'
 
 npm adduser
 npm login
@@ -16,6 +17,7 @@ npm i tinymce-plugin-multipreview
 
 npm install
 npm run build
+npm publish
 
 # 登录 npm 网站，进入令牌管理
 # 访问：https://www.npmjs.com/settings/你的用户名/tokens
