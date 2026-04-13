@@ -2,6 +2,10 @@
 
 TinyMCE 多端预览插件，支持手机、平板、PC 三种视口预览，并提供 Vue 2 / Vue 3 组件封装。
 
+## 效果图
+
+<img width="2814" height="1426" alt="image" src="https://github.com/user-attachments/assets/1ae79c88-ede5-45bf-9e77-b7c2d03281b0" />
+
 ## 功能特性
 
 - 📱 **手机预览** — 375×812，还原 iPhone 级视口
