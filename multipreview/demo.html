@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TinyMCE 多端预览插件 Demo</title>
+  <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --bg: #0d0d1a;
+      --surface: #13131f;
+      --surface2: #1a1a2e;
+      --border: rgba(255,255,255,0.08);
+      --text: #e2e8f0;
+      --text-muted: rgba(255,255,255,0.45);
+      --accent: #6ee7f7;
+      --accent2: #a78bfa;
+      --gradient: linear-gradient(135deg, #6ee7f7 0%, #a78bfa 100%);
+      --radius: 12px;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* 头部 */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .header-logo .dot {
+      width: 32px; height: 32px;
+      background: var(--gradient);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .header-logo .dot svg { width: 18px; height: 18px; color: #fff; }
+    .header-badge {
+      padding: 4px 10px;
+      background: rgba(110, 231, 247, 0.1);
+      border: 1px solid rgba(110, 231, 247, 0.2);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 64px 40px 48px;
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(110, 231, 247, 0.08);
+      border: 1px solid rgba(110, 231, 247, 0.15);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin: 0 0 16px;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+    .hero p {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* 功能卡片 */
+    .features {
+      display: flex;
+      gap: 16px;
+      padding: 0 40px 48px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      flex: 1;
+      min-width: 200px;
+      max-width: 260px;
+      transition: all 0.2s ease;
+    }
+    .feature-card:hover {
+      border-color: rgba(110, 231, 247, 0.2);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 20px; height: 20px; color: #fff; }
+    .feature-icon.mobile { background: linear-gradient(135deg, #0ea5e9, #6366f1); }
+    .feature-icon.tablet { background: linear-gradient(135deg, #10b981, #06b6d4); }
+    .feature-icon.desktop { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .feature-icon.rotate { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+    .feature-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .feature-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    /* 编辑器区域 */
+    .editor-section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 40px 80px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .editor-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+    .editor-toolbar-hint {
+      background: rgba(110, 231, 247, 0.05);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .editor-toolbar-hint strong { color: var(--accent); }
+    .hint-key {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-family: monospace;
+      color: var(--accent2);
+    }
+    #editor { padding: 0; }
+
+    /* 快速预览按钮 */
+    .preview-actions {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .btn-preview {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.01em;
+    }
+    .btn-preview svg { width: 16px; height: 16px; }
+    .btn-preview.primary {
+      background: var(--gradient);
+      color: #000;
+      box-shadow: 0 4px 20px rgba(110, 231, 247, 0.3);
+    }
+    .btn-preview.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(110, 231, 247, 0.4); }
+    .btn-preview.ghost {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-preview.ghost:hover { background: rgba(255,255,255,0.1); }
+
+    /* 代码区 */
+    .code-section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 40px 80px;
+    }
+    .code-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface2);
+      border-radius: 10px 10px 0 0;
+      padding: 8px 8px 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+    }
+    .code-tab {
+      padding: 8px 16px;
+      border-radius: 6px 6px 0 0;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .code-tab.active { background: var(--surface); color: var(--text); }
+    .code-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0 0 10px 10px;
+      padding: 24px;
+      overflow-x: auto;
+      display: none;
+    }
+    .code-panel.active { display: block; }
+    pre {
+      margin: 0;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #c9d1d9;
+    }
+    .kw { color: #ff79c6; }
+    .fn { color: #8be9fd; }
+    .str { color: #f1fa8c; }
+    .cmt { color: #6272a4; font-style: italic; }
+    .key { color: #50fa7b; }
+    .num { color: #bd93f9; }
+
+    /* 底部 */
+    footer {
+      text-align: center;
+      padding: 32px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      .header { padding: 0 16px; }
+      .hero, .editor-section, .code-section, .features { padding-left: 16px; padding-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 头部 -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      TinyMCE Preview Plugin
+    </div>
+    <div class="header-badge">v1.0.0</div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-tag">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      开箱即用 · 支持 Vue 2/3
+    </div>
+    <h1>多端实时预览<br>编辑所见即所得</h1>
+    <p>为 TinyMCE 打造的多端预览插件，一键切换手机、平板、电脑视图，支持横屏旋转，完美兼容 Vue 2 / Vue 3。</p>
+  </section>
+
+  <!-- 功能卡片 -->
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon mobile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </div>
+      <div>
+        <div class="feature-title">手机预览</div>
+        <div class="feature-desc">375×812，还原真实手机视口，验证移动端排版效果</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon tablet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </div>
+      <div>
+        <div class="feature-title">平板预览</div>
+        <div class="feature-desc">768×1024，iPad 级别视口，检查中屏幕布局</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon desktop">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div>
+        <div class="feature-title">PC 预览</div>
+        <div class="feature-desc">1280×800，桌面级完整展示，支持宽屏内容预览</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon rotate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </div>
+      <div>
+        <div class="feature-title">横竖屏切换</div>
+        <div class="feature-desc">一键旋转设备，验证横屏下的内容适配情况</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑器 -->
+  <div class="editor-section">
+    <div class="section-label">在线演示</div>
+    <div class="editor-wrapper">
+      <div class="editor-toolbar-hint">
+        💡 在下方编写内容后，点击工具栏中的
+        <strong>👁 预览</strong> 按钮，或使用下方的快捷按钮多端预览
+      </div>
+      <textarea id="editor">
+<h2>欢迎使用 TinyMCE 多端预览插件 🎉</h2>
+<p>这是一段演示内容。编辑这里的文字，然后点击工具栏的预览按钮，可以在<strong>手机、平板、电脑</strong>三种设备上实时预览效果。</p>
+
+<h3>插件特性</h3>
+<ul>
+  <li>📱 支持手机（375×812）、平板（768×1024）、电脑（1280×800）三种视口</li>
+  <li>🔄 支持横竖屏一键切换</li>
+  <li>🎨 还原真实设备外壳样式（刘海、Home 键等）</li>
+  <li>⚡ 零依赖，轻量级实现</li>
+  <li>🔧 完美兼容 Vue 2 和 Vue 3</li>
+</ul>
+
+<h3>示例代码块</h3>
+<pre><code>// 在 Vue 中使用
+import TinymcePreviewEditor from './TinymcePreviewEditor.vue'
+
+export default {
+  components: { TinymcePreviewEditor }
+}</code></pre>
+
+<blockquote>
+  <p>好的编辑器插件应该让内容创作更高效，而不是增加复杂度。</p>
+</blockquote>
+
+<p>你可以继续在这里添加图片、表格、链接等各种内容来测试预览效果。</p>
+      </textarea>
+    </div>
+    <div class="preview-actions">
+      <button class="btn-preview ghost" onclick="switchDevice('desktop')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+        PC 预览
+      </button>
+      <button class="btn-preview ghost" onclick="switchDevice('tablet')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        平板预览
+      </button>
+      <button class="btn-preview primary" onclick="switchDevice('mobile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        手机预览
+      </button>
+    </div>
+  </div>
+
+  <!-- 代码示例 -->
+  <div class="code-section">
+    <div class="section-label">使用方式</div>
+    <div class="code-tabs">
+      <button class="code-tab active" onclick="switchTab('vanilla')">原生 JS</button>
+      <button class="code-tab" onclick="switchTab('vue2')">Vue 2</button>
+      <button class="code-tab" onclick="switchTab('vue3')">Vue 3</button>
+    </div>
+
+    <div class="code-panel active" id="tab-vanilla">
+      <pre><span class="cmt">// 1. 引入插件脚本</span>
+<span class="kw">&lt;script</span> <span class="key">src</span>=<span class="str">"/plugins/multipreview/plugin.js"</span><span class="kw">&gt;&lt;/script&gt;</span>
+
+<span class="cmt">// 2. 初始化 TinyMCE</span>
+<span class="fn">tinymce</span>.<span class="fn">init</span>({
+  <span class="key">selector</span>: <span class="str">'#editor'</span>,
+  <span class="key">plugins</span>: [<span class="str">'multipreview'</span>, <span class="str">'...'</span>],
+  <span class="key">toolbar</span>: <span class="str">'bold italic | multipreview'</span>,
+  <span class="cmt">// 可选：自定义预览样式</span>
+  <span class="key">multipreview</span>: {
+    <span class="key">customStyles</span>: <span class="str">'body { background: #f9fafb; }'</span>
+  }
+})</pre>
+    </div>
+
+    <div class="code-panel" id="tab-vue2">
+      <pre><span class="cmt">&lt;!-- Vue 2 Options API --&gt;</span>
+<span class="kw">&lt;template&gt;</span>
+  <span class="kw">&lt;TinymcePreviewEditor</span>
+    <span class="key">v-model</span>=<span class="str">"content"</span>
+    <span class="key">:height</span>=<span class="str">"500"</span>
+    <span class="key">plugin-path</span>=<span class="str">"/plugins/multipreview/plugin.js"</span>
+    <span class="key">:show-external-trigger</span>=<span class="str">"true"</span>
+    <span class="key">ref</span>=<span class="str">"editor"</span>
+  <span class="kw">/&gt;</span>
+<span class="kw">&lt;/template&gt;</span>
+
+<span class="kw">&lt;script&gt;</span>
+<span class="kw">import</span> TinymcePreviewEditor <span class="kw">from</span> <span class="str">'./TinymcePreviewEditor.vue'</span>
+
+<span class="kw">export default</span> {
+  <span class="key">components</span>: { TinymcePreviewEditor },
+  <span class="key">data</span>() {
+    <span class="kw">return</span> { <span class="key">content</span>: <span class="str">''</span> }
+  },
+  <span class="key">methods</span>: {
+    <span class="fn">preview</span>() {
+      <span class="kw">this</span>.<span class="fn">$refs</span>.editor.<span class="fn">openPreview</span>()
+    }
+  }
+}
+<span class="kw">&lt;/script&gt;</span></pre>
+    </div>
+
+    <div class="code-panel" id="tab-vue3">
+      <pre><span class="cmt">&lt;!-- Vue 3 Composition API --&gt;</span>
+<span class="kw">&lt;template&gt;</span>
+  <span class="kw">&lt;TinymcePreviewEditor</span>
+    <span class="key">v-model</span>=<span class="str">"content"</span>
+    <span class="key">:height</span>=<span class="str">"500"</span>
+    <span class="key">ref</span>=<span class="str">"editorRef"</span>
+  <span class="kw">/&gt;</span>
+  <span class="kw">&lt;button</span> <span class="key">@click</span>=<span class="str">"editorRef.openPreview()"</span><span class="kw">&gt;</span>预览<span class="kw">&lt;/button&gt;</span>
+<span class="kw">&lt;/template&gt;</span>
+
+<span class="kw">&lt;script setup&gt;</span>
+<span class="kw">import</span> { ref } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import</span> TinymcePreviewEditor <span class="kw">from</span> <span class="str">'./TinymcePreviewEditor.vue3.vue'</span>
+
+<span class="kw">const</span> <span class="fn">editorRef</span> = <span class="fn">ref</span>(<span class="kw">null</span>)
+<span class="kw">const</span> <span class="fn">content</span> = <span class="fn">ref</span>(<span class="str">''</span>)
+<span class="kw">&lt;/script&gt;</span></pre>
+    </div>
+  </div>
+
+  <footer>
+    <p>TinyMCE Multi-Device Preview Plugin · MIT License · 支持 TinyMCE 5 / 6</p>
+  </footer>
+
+  <!-- 内嵌插件逻辑（Demo 直接内嵌，实际使用请引用外部文件） -->
+  <script>
+  // ======== 插件核心（内嵌演示版） ========
+  const DEVICES = {
+    mobile:  { label:'手机',  width:375,  height:812,  scale:0.75, icon:'📱' },
+    tablet:  { label:'平板',  width:768,  height:1024, scale:0.65, icon:'📟' },
+    desktop: { label:'电脑',  width:1280, height:800,  scale:0.55, icon:'🖥️' },
+  }
+
+  const STYLES = `
+    .tpm-overlay{position:fixed;inset:0;background:rgba(8,8,20,.88);backdrop-filter:blur(14px);z-index:999999;display:flex;align-items:center;justify-content:center;animation:tpm-in .25s ease}
+    @keyframes tpm-in{from{opacity:0}to{opacity:1}}
+    .tpm-modal{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden}
+    .tpm-toolbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:60px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;gap:16px}
+    .tpm-toolbar-left,.tpm-toolbar-right{display:flex;align-items:center;gap:8px;min-width:120px}
+    .tpm-toolbar-right{justify-content:flex-end}
+    .tpm-logo{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.9);font-size:15px;font-weight:700}
+    .tpm-device-tabs{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.06);border-radius:10px;padding:4px}
+    .tpm-device-btn{display:flex;align-items:center;gap:6px;padding:7px 16px;border:none;background:transparent;color:rgba(255,255,255,.5);border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;white-space:nowrap}
+    .tpm-device-btn:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.08)}
+    .tpm-device-btn.active{background:rgba(110,231,247,.15);color:#6ee7f7}
+    .tpm-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);border-radius:8px;cursor:pointer;transition:all .2s}
+    .tpm-btn:hover{background:rgba(255,255,255,.12);color:rgba(255,255,255,.9)}
+    .tpm-btn-close:hover{background:rgba(255,80,80,.2);color:#ff6b6b}
+    .tpm-stage{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:30px}
+    .tpm-stage::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(110,231,247,.03) 0%,transparent 70%);pointer-events:none}
+    .tpm-device-wrapper{display:flex;align-items:center;justify-content:center;transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+    .tpm-device-frame{position:relative;border-radius:40px;background:linear-gradient(160deg,#2a2a3e,#1a1a2e 50%,#12121f);box-shadow:0 0 0 1px rgba(255,255,255,.12),0 0 0 2px rgba(0,0,0,.8),0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.1),0 0 60px rgba(110,231,247,.06);transition:all .45s cubic-bezier(.34,1.56,.64,1);overflow:hidden}
+    .tpm-device-frame::before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 50%);pointer-events:none;z-index:2}
+    .tpm-device-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:30px;background:#0a0a14;border-radius:0 0 20px 20px;z-index:10;display:flex;align-items:center;justify-content:center}
+    .tpm-notch-inner{width:60px;height:6px;background:#1a1a2e;border-radius:3px}
+    .tpm-device-screen{position:absolute;inset:12px;border-radius:28px;overflow:hidden;background:#fff}
+    .tpm-iframe{width:100%;height:100%;border:none;display:block}
+    .tpm-device-home{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:10;display:flex;align-items:center;justify-content:center}
+    .tpm-home-bar{width:100px;height:4px;background:rgba(255,255,255,.35);border-radius:2px}
+    .tpm-device-frame.tablet{border-radius:24px}
+    .tpm-device-frame.tablet .tpm-device-notch{width:80px;height:20px;border-radius:0 0 12px 12px}
+    .tpm-device-frame.tablet .tpm-notch-inner{width:40px;height:5px}
+    .tpm-device-frame.desktop{border-radius:12px 12px 0 0}
+    .tpm-device-frame.desktop .tpm-device-notch,.tpm-device-frame.desktop .tpm-device-home{display:none}
+    .tpm-device-frame.desktop .tpm-device-screen{inset:32px 8px 8px;border-radius:4px}
+    .tpm-desktop-bar{position:absolute;top:0;left:0;right:0;height:32px;background:linear-gradient(to bottom,#2a2a42,#1e1e32);border-radius:12px 12px 0 0;display:flex;align-items:center;padding:0 12px;gap:6px;z-index:5}
+    .tpm-desktop-dot{width:10px;height:10px;border-radius:50%}
+    .tpm-footer{display:flex;align-items:center;justify-content:center;gap:8px;height:40px;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;font-size:12px;color:rgba(255,255,255,.3)}
+    .tpm-device-info{color:rgba(110,231,247,.7);font-weight:700;letter-spacing:.05em}
+    .tpm-device-label{color:rgba(255,255,255,.5)}
+    @keyframes tpm-dev-in{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .tpm-entering{animation:tpm-dev-in .4s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes tpm-rot{0%{transform:scale(1)}50%{transform:scale(.92) rotate(6deg)}100%{transform:scale(1)}}
+    .tpm-rotating .tpm-device-frame{animation:tpm-rot .45s cubic-bezier(.34,1.56,.64,1)}
+  `
+
+  function injectStyles() {
+    if (document.getElementById('tpm-s')) return
+    const s = document.createElement('style')
+    s.id = 'tpm-s'
+    s.textContent = STYLES
+    document.head.appendChild(s)
+  }
+
+  function getFullHtml(content) {
+    return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+      *{box-sizing:border-box}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.7;color:#333;margin:0;padding:20px;word-wrap:break-word}
+      img{max-width:100%;height:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}
+      pre{overflow-x:auto;background:#f5f5f5;padding:12px;border-radius:4px}
+      code{background:#f5f5f5;padding:2px 4px;border-radius:3px;font-size:.9em}
+      blockquote{border-left:4px solid #ddd;margin:0;padding-left:16px;color:#666}
+      h1,h2,h3,h4,h5,h6{line-height:1.3;margin-top:1.5em;margin-bottom:.5em}
+      p{margin:.8em 0}a{color:#0066cc}ul,ol{padding-left:1.5em}
+    </style></head><body>${content}</body></html>`
+  }
+
+  let currentDevice = 'mobile', isLandscape = false, modalEl = null, keyHandler = null
+
+  function openPreview(deviceKey) {
+    injectStyles()
+    const deviceBtns = Object.entries(DEVICES).map(([k, d]) =>
+      `<button class="tpm-device-btn ${k === (deviceKey||'mobile') ? 'active' : ''}" data-device="${k}">${d.icon} ${d.label}</button>`
+    ).join('')
+
+    const html = `
+    <div class="tpm-overlay" id="tpm-overlay">
+      <div class="tpm-modal">
+        <div class="tpm-toolbar">
+          <div class="tpm-toolbar-left">
+            <div class="tpm-logo">👁 内容预览</div>
+          </div>
+          <div class="tpm-device-tabs">${deviceBtns}</div>
+          <div class="tpm-toolbar-right">
+            <button class="tpm-btn" id="tpm-rotate" title="旋转屏幕">↻</button>
+            <button class="tpm-btn tpm-btn-close" id="tpm-close">✕</button>
+          </div>
+        </div>
+        <div class="tpm-stage" style="position:relative">
+          <div class="tpm-device-wrapper" id="tpm-dw">
+            <div class="tpm-device-frame" id="tpm-df">
+              <div class="tpm-device-notch"><div class="tpm-notch-inner"></div></div>
+              <div class="tpm-device-screen">
+                <iframe class="tpm-iframe" id="tpm-iframe" sandbox="allow-same-origin allow-scripts"></iframe>
+              </div>
+              <div class="tpm-device-home"><div class="tpm-home-bar"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="tpm-footer">
+          <span class="tpm-device-info" id="tpm-info"></span>
+          <span>·</span>
+          <span class="tpm-device-label" id="tpm-label"></span>
+        </div>
+      </div>
+    </div>`
+
+    const div = document.createElement('div')
+    div.innerHTML = html
+    modalEl = div.firstElementChild
+    document.body.appendChild(modalEl)
+    currentDevice = deviceKey || 'mobile'
+    isLandscape = false
+    applyDevice(currentDevice, false)
+    loadContent()
+
+    modalEl.querySelector('#tpm-close').onclick = closePreview
+    modalEl.querySelector('#tpm-rotate').onclick = rotateDevice
+    modalEl.querySelectorAll('.tpm-device-btn').forEach(btn => {
+      btn.onclick = () => { currentDevice = btn.dataset.device; isLandscape = false; applyDevice(currentDevice) }
+    })
+    keyHandler = e => { if (e.key === 'Escape') closePreview() }
+    document.addEventListener('keydown', keyHandler)
+  }
+
+  function closePreview() {
+    if (modalEl) { modalEl.remove(); modalEl = null }
+    if (keyHandler) { document.removeEventListener('keydown', keyHandler); keyHandler = null }
+  }
+
+  function loadContent() {
+    const editor = tinymce.activeEditor
+    const content = editor ? editor.getContent() : document.getElementById('editor').value || ''
+    const iframe = modalEl.querySelector('#tpm-iframe')
+    const blob = new Blob([getFullHtml(content)], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    iframe.src = url
+    iframe.onload = () => URL.revokeObjectURL(url)
+  }
+
+  function applyDevice(key, animate = true) {
+    const d = DEVICES[key]
+    const frame = modalEl.querySelector('#tpm-df')
+    const wrapper = modalEl.querySelector('#tpm-dw')
+    frame.className = 'tpm-device-frame ' + key
+    if (animate) { frame.classList.add('tpm-entering'); setTimeout(() => frame.classList.remove('tpm-entering'), 400) }
+    if (key === 'desktop') {
+      if (!frame.querySelector('.tpm-desktop-bar')) {
+        const bar = document.createElement('div'); bar.className = 'tpm-desktop-bar'
+        bar.innerHTML = '<div class="tpm-desktop-dot" style="background:#ff5f57"></div><div class="tpm-desktop-dot" style="background:#febc2e"></div><div class="tpm-desktop-dot" style="background:#28c840"></div>'
+        frame.prepend(bar)
+      }
+    } else { frame.querySelector('.tpm-desktop-bar')?.remove() }
+    const [w, h] = [d.width, d.height]
+    frame.style.width = w + 'px'; frame.style.height = h + 'px'
+    wrapper.style.transform = `scale(${d.scale})`
+    modalEl.querySelector('#tpm-info').textContent = `${w} × ${h}`
+    modalEl.querySelector('#tpm-label').textContent = d.label + ' 预览'
+    modalEl.querySelectorAll('.tpm-device-btn').forEach(b => b.classList.toggle('active', b.dataset.device === key))
+    modalEl.querySelector('#tpm-rotate').style.display = key === 'desktop' ? 'none' : 'flex'
+  }
+
+  function rotateDevice() {
+    const d = DEVICES[currentDevice]
+    isLandscape = !isLandscape
+    const wrapper = modalEl.querySelector('#tpm-dw')
+    wrapper.classList.add('tpm-rotating'); setTimeout(() => wrapper.classList.remove('tpm-rotating'), 500)
+    const [w, h] = isLandscape ? [d.height, d.width] : [d.width, d.height]
+    const frame = modalEl.querySelector('#tpm-df')
+    frame.style.width = w + 'px'; frame.style.height = h + 'px'
+    wrapper.style.transform = `scale(${d.scale * (isLandscape ? 0.85 : 1)})`
+    modalEl.querySelector('#tpm-info').textContent = `${w} × ${h}`
+    modalEl.querySelector('#tpm-label').textContent = d.label + (isLandscape ? ' (横屏)' : '') + ' 预览'
+  }
+
+  function switchDevice(key) { openPreview(key) }
+
+  // 代码 Tab 切换
+  function switchTab(id) {
+    document.querySelectorAll('.code-tab').forEach((t, i) => {
+      t.classList.toggle('active', t.onclick.toString().includes(id))
+    })
+    document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('active'))
+    document.getElementById('tab-' + id).classList.add('active')
+    document.querySelectorAll('.code-tab').forEach(t => {
+      t.classList.toggle('active', t.getAttribute('onclick').includes(id))
+    })
+  }
+
+  // 初始化 TinyMCE
+  tinymce.init({
+    selector: '#editor',
+    height: 480,
+    menubar: false,
+    plugins: ['lists', 'link', 'image', 'table', 'code', 'fullscreen', 'wordcount'],
+    toolbar: 'undo redo | blocks | bold italic underline | forecolor | alignleft aligncenter alignright | bullist numlist | link image table | code | preview',
+    toolbar_sticky: true,
+    content_style: `body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.7;color:#1f2937;margin:0;padding:24px 28px}`,
+    branding: false,
+    promotion: false,
+    setup(editor) {
+      // 注册预览命令
+      editor.addCommand('mceMultiPreview', () => openPreview('mobile'))
+      // 注册预览按钮
+      editor.ui.registry.addButton('preview', {
+        tooltip: '多端预览',
+        icon: 'preview',
+        onAction: () => editor.execCommand('mceMultiPreview')
+      })
+    }
+  })
+  </script>
+</body>
+</html>
