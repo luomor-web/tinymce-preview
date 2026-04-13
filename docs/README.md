@@ -14,6 +14,9 @@ npm publish
 
 npm i tinymce-plugin-multipreview
 
+npm install
+npm run build
+
 # 登录 npm 网站，进入令牌管理
 # 访问：https://www.npmjs.com/settings/你的用户名/tokens
 
