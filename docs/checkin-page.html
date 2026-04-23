@@ -472,7 +472,24 @@ const ACTIVITY_ID = urlParams.get('id') || '174';
 
 let countdown = REFRESH_INTERVAL;
 let countdownTimer = null;
-let qrImgEl = null;
+
+// On page load: probe QR endpoint — success means cookie session is alive
+(async function checkSession() {
+  try {
+    const res = await fetch(`${API_BASE}/signadmin/activity/sign-in-qrcode/${ACTIVITY_ID}`, { credentials: 'include' });
+    if (res.ok) {
+      const blob = await res.blob();
+      if (blob && blob.size > 100) {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainPage').style.display = 'flex';
+        await loadActivity();
+        showQRBlob(blob);
+        startCountdown();
+        return;
+      }
+    }
+  } catch(e) { /* session invalid, show login */ }
+})();
 
 // ── Input enter key
 document.getElementById('password').addEventListener('keydown', e => {
@@ -547,15 +564,21 @@ async function loadActivity() {
   }
 }
 
+function showQRBlob(blob) {
+  const frame = document.getElementById('qrFrame');
+  const url = URL.createObjectURL(blob);
+  frame.innerHTML = `<div class="qr-corner-bl"></div><div class="qr-corner-br"></div><img src="${url}" alt="签到二维码" style="display:block;width:200px;height:200px;border-radius:4px;">`;
+}
+
 async function loadQR() {
   const frame = document.getElementById('qrFrame');
-  frame.innerHTML = `<div class="qr-corner-bl"></div><div class="qr-corner-br"></div><div class="spinner-wrap" id="qrLoading"><div class="spinner"></div><span class="spinner-label">生成中…</span></div>`;
+  frame.innerHTML = `<div class="qr-corner-bl"></div><div class="qr-corner-br"></div><div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">生成中…</span></div>`;
 
   try {
     const res = await fetch(`${API_BASE}/signadmin/activity/sign-in-qrcode/${ACTIVITY_ID}`, { credentials: 'include' });
+    if (!res.ok) throw new Error('not ok');
     const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    frame.innerHTML = `<div class="qr-corner-bl"></div><div class="qr-corner-br"></div><img src="${url}" alt="签到二维码" style="display:block;width:200px;height:200px;border-radius:4px;">`;
+    showQRBlob(blob);
   } catch(e) {
     frame.innerHTML = `<div class="qr-corner-bl"></div><div class="qr-corner-br"></div><div style="width:200px;height:200px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted);padding:16px;text-align:center;">二维码加载失败</div>`;
   }
