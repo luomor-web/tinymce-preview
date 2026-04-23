@@ -9,6 +9,11 @@ CLAUDE.md改写为中文
 将tinymce插件更改为npm可以安装的版本
 Module not found: Error: Can't resolve 'tinymce-plugin-multipreview'
 
+npm install -g @qwen-code/qwen-code@latest
+qwen
+/auth
+qwen --resume cef5cb56-f5b5-48d8-9f72-b61f0c15ac53
+
 npm adduser
 npm login
 npm publish
